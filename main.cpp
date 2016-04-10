@@ -1,7 +1,7 @@
-#include <iostream>
+#include "global.h"
+#include "application.h"
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
-using namespace std;
 
 typedef websocketpp::server<websocketpp::config::asio> Server;
 
@@ -10,6 +10,15 @@ void on_message(websocketpp::connection_hdl hdl, Server::message_ptr msg) {
 }
 
 int main() {
+  Application* app;
+
+  app = new Application;
+
+  if (app->init("config.json")){
+    app->run();
+  }
+  app->quit();
+  /*
   Server wsserver;
   wsserver.clear_access_channels(websocketpp::log::alevel::all);
   wsserver.set_message_handler(&on_message);
@@ -28,4 +37,5 @@ int main() {
 
   cout << "Running server..." << endl;
   wsserver.run();
+  */
 }

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-g++ -std=c++11 *.cpp -lboost_system
+g++ -Wall *.cpp -lboost_system

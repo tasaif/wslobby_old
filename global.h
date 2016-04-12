@@ -1,10 +1,17 @@
+#ifndef GLOBAL_H
+#define GLOBAL_H
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-#include "json/src/json.hpp"
-using namespace std;
-using json = nlohmann::json;
+#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/server.hpp>
 
-class Config;
+using namespace std;
+
+typedef websocketpp::server<websocketpp::config::asio> WS_Server;
+
 class Application;
+
+#endif

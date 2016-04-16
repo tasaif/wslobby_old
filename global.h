@@ -7,6 +7,7 @@
 #include <sstream>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <jsoncpp/json/json.h>
 
 using namespace std;
 

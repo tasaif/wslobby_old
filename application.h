@@ -7,11 +7,12 @@
 class Application {
   private:
     //Config* __config;
-    WS_Server* __wsserver;
+    static WS_Server __wsserver;
     static void on_message( \
         websocketpp::connection_hdl,
         WS_Server::message_ptr
     );
+    static bool on_connect(websocketpp::connection_hdl);
 
   public:
     Application();

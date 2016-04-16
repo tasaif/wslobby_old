@@ -7,12 +7,17 @@
             if ("WebSocket" in window)
             {
                // Let us open a web socket
-               var ws = new WebSocket("ws://ogre.dereksaif.com:9002");
+              var url = "ws://localhost:8081";
+               var ws = new WebSocket(url);
                ws.onopen = function()
                {
                   // Web Socket is connected, send data using send()
-                  ws.send("Message to send");
-                  console.log("Message is sent...");
+                  var data = {
+                    'lobby-id': '12345'
+                  };
+                  var msg = JSON.stringify(data);
+                  ws.send(msg);
+                  console.log("Sent: " + msg);
                };
                ws.onmessage = function (evt)
                {

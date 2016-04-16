@@ -1,3 +1,3 @@
 #!/bin/bash
 
-g++ -Wall *.cpp -ljsoncpp -lboost_system
+g++ -Wall *.cpp -lcurlpp -lcurl -ljsoncpp -lboost_system

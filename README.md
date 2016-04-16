@@ -5,5 +5,7 @@ http://www.zaphoyd.com/websocketpp/manual/building-program-websocket
 https://mayaposch.wordpress.com/2015/09/16/creating-a-websocket-server-with-websocket
 
 # Debian packages
-libwebsocketpp-dev - C++/Boost Asio based websocket client/server library. Dev package
+libwebsocketpp-dev
 libjsoncpp-dev
+libcurlpp-dev
+libcurl4-openssl-dev

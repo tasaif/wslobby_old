@@ -13,6 +13,8 @@ class Application {
         WS_Server::message_ptr
     );
     static bool on_connect(websocketpp::connection_hdl);
+    static void send_con(websocketpp::connection_hdl, string);
+    static void close_con(websocketpp::connection_hdl, string);
 
   public:
     Application();

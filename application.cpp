@@ -6,10 +6,26 @@
 using namespace std;
 
 WS_Server Application::__wsserver;
+ConnectionList Application::__connection_list;
+LobbyList Application::__lobby_list;
 
 bool Application::on_connect(websocketpp::connection_hdl hdl){
   cout << "New Connection" << endl;
   return true;
+}
+
+void Application::on_close(websocketpp::connection_hdl hdl){
+  cout << "Closing Connection" << endl;
+  ConnectionListIterator cit;
+  LobbyListIterator lit;
+  cit = __connection_list.find(hdl);
+  if (cit != __connection_list.end()){
+    unsigned lobby_id = cit->second.__lobby_id;
+    unsigned lobby_position = cit->second.__lobby_position;
+    lit = __lobby_list.find(lobby_id);
+    lit->second.erase(lit->second.begin() + lobby_position);
+    __connection_list.erase(cit);
+  }
 }
 
 void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message_ptr ws_msg) {
@@ -40,6 +56,18 @@ void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message
           close_con(hdl, stringified_verification.str());
         } else {
           cout << "Successful connection" << endl;
+          ConnectionData connection_data = ConnectionData(lobby_id);
+          LobbyListIterator it = __lobby_list.find(lobby_id);
+          if (it == __lobby_list.end()){
+            cout << "Creating Lobby" << endl;
+            __lobby_list[lobby_id] = vector<connection_hdl>();
+            it = __lobby_list.find(lobby_id);
+          } else {
+            cout << "Lobby existed: " << it->second.size() << " other connections" << endl;
+          }
+          connection_data.__lobby_position = it->second.size();
+          it->second.push_back(hdl);
+          __connection_list[hdl] = connection_data;
           send_con(hdl, stringified_verification.str());
         }
       } else {
@@ -69,6 +97,7 @@ void Application::run(){
   __wsserver.clear_access_channels(websocketpp::log::alevel::all);
   __wsserver.set_validate_handler(&on_connect);
   __wsserver.set_message_handler(&on_message);
+  __wsserver.set_close_handler(&on_close);
   __wsserver.init_asio();
   __wsserver.listen(8081);
   __wsserver.start_accept();

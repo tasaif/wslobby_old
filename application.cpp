@@ -19,12 +19,39 @@ void Application::on_close(websocketpp::connection_hdl hdl){
   ConnectionListIterator cit;
   LobbyListIterator lit;
   cit = __connection_list.find(hdl);
+  // If the connection had a valid lobby id remove it from
+  // the lobby and the connection list
   if (cit != __connection_list.end()){
     unsigned lobby_id = cit->second.__lobby_id;
     unsigned lobby_position = cit->second.__lobby_position;
     lit = __lobby_list.find(lobby_id);
     lit->second.erase(lit->second.begin() + lobby_position);
     __connection_list.erase(cit);
+    // If that was the last connection in the lobby
+    // remove the lobby as well and invalidate it
+    if (lit->second.size() == 0){
+      __lobby_list.erase(lit);
+      cout << "Removing Lobby: " << lobby_id << endl;
+      ostringstream url;
+      ostringstream stringified_verification;
+      url << "http://localhost:3000/games/remove_lobby/" << lobby_id;
+      curlpp::Easy request;
+      request.setOpt(new curlpp::options::Url(url.str()));
+      stringified_verification << request;
+      Json::Reader reader;
+      Json::Value verification_msg;
+      bool parsingSuccessful = reader.parse(stringified_verification.str(), verification_msg);
+      if (parsingSuccessful){
+        if (verification_msg["error"].asBool()){
+          cout << "Error: lobby db responded with error" << endl;
+        }
+        cout << verification_msg["text"] << endl;
+      } else {
+        cout << "Error: expected json response from lobby db" << endl;
+        cout << url << endl;
+        cout << stringified_verification.str() << endl;
+      }
+    }
   }
 }
 
@@ -51,7 +78,7 @@ void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message
       parsingSuccessful = reader.parse(stringified_verification.str(), verification_msg);
       if (parsingSuccessful){
         if (verification_msg["error"].asBool()){
-          cout << "Error: wslobby responded with error" << endl;
+          cout << "Error: lobby db responded with error" << endl;
           cout << verification_msg["text"] << endl;
           close_con(hdl, stringified_verification.str());
         } else {
@@ -71,7 +98,7 @@ void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message
           send_con(hdl, stringified_verification.str());
         }
       } else {
-        cout << "Error: wslobby responded with unparsible response" << endl;
+        cout << "Error: lobby db responded with unparsible response" << endl;
         cout << stringified_verification << endl;
       }
     } else {

@@ -6,6 +6,9 @@ https://mayaposch.wordpress.com/2015/09/16/creating-a-websocket-server-with-webs
 
 # Debian packages
 libwebsocketpp-dev
-libjsoncpp-dev
+//libjsoncpp-dev is too old
 libcurlpp-dev
 libcurl4-openssl-dev
+
+# Linked against
+  https://github.com/open-source-parsers/jsoncpp 1.7.2

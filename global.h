@@ -8,7 +8,7 @@
 #include <vector>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
-#include <jsoncpp/json/json.h>
+#include "json/json.h"
 #include "connection_data.h"
 
 using namespace std;

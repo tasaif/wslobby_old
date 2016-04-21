@@ -18,17 +18,22 @@ void Application::on_close(websocketpp::connection_hdl hdl){
   cout << "Closing Connection" << endl;
   ConnectionListIterator cit;
   LobbyListIterator lit;
+  Json::Reader reader;
+  Json::Value verification_msg;
+  Json::Value who_left;
   cit = __connection_list.find(hdl);
   // If the connection had a valid lobby id remove it from
   // the lobby and the connection list
   if (cit != __connection_list.end()){
     unsigned lobby_id = cit->second.__lobby_id;
     unsigned lobby_position = cit->second.__lobby_position;
+    unsigned id = cit->second.__id;
     lit = __lobby_list.find(lobby_id);
     lit->second.erase(lit->second.begin() + lobby_position);
     __connection_list.erase(cit);
     // If that was the last connection in the lobby
     // remove the lobby as well and invalidate it
+    // otherwise tell everyone who left
     if (lit->second.size() == 0){
       __lobby_list.erase(lit);
       cout << "Removing Lobby: " << lobby_id << endl;
@@ -38,8 +43,6 @@ void Application::on_close(websocketpp::connection_hdl hdl){
       curlpp::Easy request;
       request.setOpt(new curlpp::options::Url(url.str()));
       stringified_verification << request;
-      Json::Reader reader;
-      Json::Value verification_msg;
       bool parsingSuccessful = reader.parse(stringified_verification.str(), verification_msg);
       if (parsingSuccessful){
         if (verification_msg["error"].asBool()){
@@ -51,6 +54,13 @@ void Application::on_close(websocketpp::connection_hdl hdl){
         cout << url << endl;
         cout << stringified_verification.str() << endl;
       }
+    } else {
+      who_left["from"] = Json::Value("server");
+      who_left["type"] = Json::Value("client_disconnected");
+      who_left["id"] = Json::Value(id);
+      Json::StreamWriterBuilder wbuilder;
+      string stringified_who_left = Json::writeString(wbuilder, who_left);
+      broadcast(lit, stringified_who_left);
     }
   }
 }
@@ -93,9 +103,22 @@ void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message
             cout << "Lobby existed: " << it->second.size() << " other connections" << endl;
           }
           connection_data.__lobby_position = it->second.size();
-          it->second.push_back(hdl);
+          if (it->second.size() == 0){
+            connection_data.__id = 1;
+          } else {
+            connection_data.__id = __connection_list[it->second.back()].__id + 1;
+          }
           __connection_list[hdl] = connection_data;
-          send_con(hdl, stringified_verification.str());
+          it->second.push_back(hdl);
+          verification_msg["from"] = Json::Value("server");
+          verification_msg["type"] = Json::Value("assign_id");
+          verification_msg["id"] = Json::Value(connection_data.__id);
+          Json::StreamWriterBuilder wbuilder;
+          std::string confirmation = Json::writeString(wbuilder, verification_msg);
+          send_con(hdl, confirmation);
+          verification_msg["type"] = Json::Value("new_client");
+          string new_connection_message = Json::writeString(wbuilder, verification_msg);
+          broadcast(it, new_connection_message);
         }
       } else {
         cout << "Error: lobby db responded with unparsible response" << endl;
@@ -138,6 +161,12 @@ void Application::quit(){
 
 void Application::send_con(websocketpp::connection_hdl hdl, string msg){
   __wsserver.get_con_from_hdl(hdl)->send(msg);
+}
+
+void Application::broadcast(LobbyListIterator lit, string msg){
+  for(unsigned i=0; i<lit->second.size(); i++){
+    send_con(lit->second[i], msg);
+  }
 }
 
 void Application::close_con(websocketpp::connection_hdl hdl, string msg){

@@ -76,7 +76,17 @@ void Application::on_message(websocketpp::connection_hdl hdl, WS_Server::message
     std::cout << "Failed to parse request\n" << reader.getFormattedErrorMessages();
     return;
   } else {
-    if (msg["request"] == "connect"){
+    if (msg["request"] == "send"){
+      unsigned lobby_id = msg["lobby"].asInt();
+      LobbyListIterator it = __lobby_list.find(lobby_id);
+      cout << lobby_id << endl;
+      cout << stringified_msg << endl;
+      for(unsigned i=0; i<it->second.size(); i++){
+        //send_con(it->second[i], stringified_msg);
+        cout << it->second[i] << endl;
+      }
+      //broadcast(it, stringified_msg, hdl);
+    } else if (msg["request"] == "connect"){
       unsigned lobby_id = msg["lobby"].asInt();
       cout << "Requested to join lobby: " << lobby_id << endl;
       ostringstream url;
@@ -161,6 +171,19 @@ void Application::quit(){
 
 void Application::send_con(websocketpp::connection_hdl hdl, string msg){
   __wsserver.get_con_from_hdl(hdl)->send(msg);
+}
+
+void Application::broadcast(LobbyListIterator lit, string msg, websocketpp::connection_hdl from){
+  ConnectionListIterator cit;
+  for(unsigned i=0; i<lit->second.size(); i++){
+    //cit = __connection_list.find(lit->second[i]);
+    //if (cit != __connection_list.end()){
+    //  cout << cit->second.__id << endl;
+    //}
+    //if (lit->second[i] != from){
+    //  send_con(lit->second[i], msg);
+    //}
+  }
 }
 
 void Application::broadcast(LobbyListIterator lit, string msg){
